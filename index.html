@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The AI Board — Run Your Empire with AI Agents</title>
+<style>
+  :root{--black:#030712;--dark:#0d1117;--dark2:#161b22;--dark3:#21262d;
+    --gold:#c9a84c;--gold2:#f0c040;--teal:#2dd4bf;--green:#22c55e;
+    --red:#ef4444;--text:#e6edf3;--muted:#8b949e;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--black);color:var(--text);font-family:'Georgia',serif;min-height:100vh;overflow-x:hidden;}
+  nav{background:var(--dark)ee;backdrop-filter:blur(12px);border-bottom:1px solid #30363d;
+      display:flex;align-items:center;justify-content:space-between;padding:0 3rem;height:64px;position:sticky;top:0;z-index:100;}
+  .nav-logo{width:32px;height:32px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:bold;color:var(--black);}
+  .nav-name{color:var(--gold);font-size:1rem;font-weight:bold;letter-spacing:0.05em;margin-left:0.8rem;}
+  .nav-brand{display:flex;align-items:center;}
+  .nav-links{display:flex;gap:2rem;align-items:center;}
+  .nav-links a{color:var(--muted);text-decoration:none;font-size:0.85rem;font-family:'Arial',sans-serif;transition:color 0.2s;}
+  .nav-links a:hover{color:var(--text);}
+  .nav-cta{background:var(--gold);color:var(--black);padding:0.45rem 1.2rem;border-radius:6px;font-size:0.82rem;font-weight:bold;font-family:'Arial',sans-serif;text-decoration:none;}
+
+  .hero{min-height:92vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+        text-align:center;padding:4rem 2rem;
+        background:radial-gradient(ellipse 80% 50% at 50% 0%,#1a1200,transparent),
+                   radial-gradient(ellipse 50% 40% at 80% 100%,#001a1a,transparent);}
+  .hero-tag{display:inline-block;background:#c9a84c15;border:1px solid #c9a84c44;color:var(--gold);
+            padding:0.35rem 1.2rem;border-radius:20px;font-size:0.78rem;font-family:'Arial',sans-serif;
+            letter-spacing:0.1em;text-transform:uppercase;margin-bottom:2rem;}
+  .hero h1{font-size:clamp(2.5rem,6vw,4.5rem);color:var(--text);line-height:1.1;margin-bottom:1.2rem;max-width:900px;}
+  .hero h1 em{color:var(--gold);font-style:normal;}
+  .hero-sub{font-size:clamp(1rem,2vw,1.25rem);color:var(--muted);max-width:680px;line-height:1.8;
+             margin-bottom:2.5rem;font-family:'Arial',sans-serif;}
+  .hero-btns{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-bottom:3rem;}
+  .btn-gold{background:var(--gold);color:var(--black);padding:0.85rem 2.2rem;border-radius:8px;
+             font-size:0.95rem;font-weight:bold;font-family:'Arial',sans-serif;text-decoration:none;transition:all 0.2s;}
+  .btn-gold:hover{background:var(--gold2);transform:translateY(-2px);}
+  .btn-outline{background:transparent;color:var(--text);padding:0.85rem 2.2rem;border-radius:8px;
+                font-size:0.95rem;font-family:'Arial',sans-serif;text-decoration:none;
+                border:1px solid #30363d;transition:all 0.2s;}
+  .btn-outline:hover{border-color:var(--gold);color:var(--gold);}
+  .hero-meta{font-family:'Arial',sans-serif;font-size:0.82rem;color:var(--muted);}
+  .hero-meta strong{color:var(--gold);}
+
+  .live-bar{background:var(--dark2);border-top:1px solid #30363d;border-bottom:1px solid #30363d;
+             padding:0.6rem 2rem;display:flex;align-items:center;gap:2rem;overflow-x:auto;
+             font-family:'Arial',sans-serif;font-size:0.78rem;}
+  .live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite;flex-shrink:0;}
+  @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+  .live-item{display:flex;gap:0.5rem;align-items:center;flex-shrink:0;color:var(--muted);}
+  .live-item strong{color:var(--text);}
+  .up{color:var(--green);}
+
+  .section{padding:5rem 2rem;max-width:1200px;margin:0 auto;}
+  .section-label{font-size:0.72rem;color:var(--gold);font-family:'Arial',sans-serif;
+                  text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem;}
+  .section-h{font-size:clamp(1.8rem,4vw,2.8rem);color:var(--text);margin-bottom:0.8rem;line-height:1.2;}
+  .section-p{font-size:0.95rem;color:var(--muted);font-family:'Arial',sans-serif;
+               max-width:600px;line-height:1.8;margin-bottom:3rem;}
+
+  .board-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.2rem;}
+  .bcard{background:var(--dark2);border:1px solid #30363d;border-radius:12px;padding:1.5rem;
+          transition:all 0.2s;position:relative;overflow:hidden;}
+  .bcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+  .bcard.c1::before{background:linear-gradient(90deg,#c9a84c,#f0c040);}
+  .bcard.c2::before{background:linear-gradient(90deg,#10a37f,#34d399);}
+  .bcard.c3::before{background:linear-gradient(90deg,#4285f4,#ea4335);}
+  .bcard.c4::before{background:linear-gradient(90deg,#a78bfa,#7c3aed);}
+  .bcard.c5::before{background:linear-gradient(90deg,#20b2aa,#00ced1);}
+  .bcard.c6::before{background:linear-gradient(90deg,#ff6b6b,#feca57);}
+  .bcard:hover{border-color:var(--gold)44;transform:translateY(-3px);}
+  .bcard-icon{font-size:2rem;margin-bottom:0.8rem;}
+  .bcard-role{font-size:0.68rem;color:var(--gold);font-family:'Arial',sans-serif;
+               text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.2rem;}
+  .bcard-name{font-size:1.05rem;font-weight:bold;color:var(--text);margin-bottom:0.6rem;}
+  .bcard-desc{font-size:0.8rem;color:var(--muted);font-family:'Arial',sans-serif;line-height:1.7;margin-bottom:0.8rem;}
+  .bcard-tags{display:flex;flex-wrap:wrap;gap:0.3rem;}
+  .tag{background:var(--dark3);color:var(--muted);border:1px solid #30363d;border-radius:4px;
+        padding:0.12rem 0.45rem;font-size:0.68rem;font-family:'Arial',sans-serif;}
+
+  .how-bg{background:var(--dark);border-top:1px solid #30363d;border-bottom:1px solid #30363d;padding:5rem 2rem;}
+  .how-inner{max-width:900px;margin:0 auto;}
+  .steps{display:flex;flex-direction:column;gap:1rem;margin-top:2.5rem;}
+  .step{display:flex;gap:1.5rem;background:var(--dark2);border:1px solid #30363d;border-radius:12px;
+         padding:1.5rem;transition:border-color 0.2s;}
+  .step:hover{border-color:var(--gold)44;}
+  .step-n{background:var(--gold);color:var(--black);width:40px;height:40px;border-radius:50%;
+           display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1rem;
+           flex-shrink:0;font-family:'Arial',sans-serif;}
+  .step h3{font-size:0.95rem;color:var(--text);margin-bottom:0.3rem;}
+  .step p{font-size:0.82rem;color:var(--muted);font-family:'Arial',sans-serif;line-height:1.7;}
+  .chips{display:flex;gap:0.4rem;margin-top:0.5rem;flex-wrap:wrap;}
+  .chip{background:var(--dark3);border:1px solid #30363d;border-radius:20px;
+         padding:0.2rem 0.7rem;font-size:0.7rem;font-family:'Arial',sans-serif;color:var(--text);}
+
+  .case-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.2rem;}
+  .ccard{background:var(--dark2);border:1px solid #30363d;border-radius:12px;padding:1.5rem;transition:all 0.2s;}
+  .ccard:hover{border-color:var(--teal)44;transform:translateY(-2px);}
+  .cstatus{display:inline-block;padding:0.18rem 0.6rem;border-radius:4px;font-size:0.68rem;
+             font-family:'Arial',sans-serif;font-weight:bold;margin-bottom:0.6rem;}
+  .cstatus.live{background:#22c55e22;color:var(--green);border:1px solid #22c55e44;}
+  .cstatus.building{background:#c9a84c22;color:var(--gold);border:1px solid #c9a84c44;}
+  .cstatus.planned{background:#94a3b822;color:var(--muted);border:1px solid #94a3b844;}
+  .cnum{font-size:0.68rem;color:var(--teal);font-family:'Arial',sans-serif;
+         text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.3rem;}
+  .ctitle{font-size:0.95rem;font-weight:bold;color:var(--text);margin-bottom:0.5rem;}
+  .cdesc{font-size:0.8rem;color:var(--muted);font-family:'Arial',sans-serif;line-height:1.7;margin-bottom:0.8rem;}
+
+  .book-bg{background:linear-gradient(135deg,#0d1117,#1a1200);border-top:1px solid #30363d;padding:5rem 2rem;}
+  .book-inner{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:260px 1fr;gap:4rem;align-items:start;}
+  @media(max-width:768px){.book-inner{grid-template-columns:1fr;}}
+  .book-cover{background:linear-gradient(160deg,var(--dark2),var(--dark3));border:1px solid var(--gold)44;
+               border-radius:16px;aspect-ratio:3/4;display:flex;flex-direction:column;
+               align-items:center;justify-content:center;text-align:center;padding:2rem;gap:1rem;
+               box-shadow:0 20px 60px #c9a84c22;}
+  .book-cover-icon{font-size:3.5rem;}
+  .book-cover-title{font-size:1.5rem;color:var(--gold);font-weight:bold;line-height:1.2;}
+  .book-cover-sub{font-size:0.72rem;color:var(--muted);font-family:'Arial',sans-serif;line-height:1.5;}
+  .book-cover-author{font-size:0.78rem;color:var(--text);font-family:'Arial',sans-serif;
+                      border-top:1px solid #30363d;padding-top:0.8rem;width:100%;text-align:center;}
+  .book-info h2{font-size:2rem;color:var(--text);margin-bottom:1rem;line-height:1.2;}
+  .book-info p{font-size:0.88rem;color:var(--muted);font-family:'Arial',sans-serif;line-height:1.8;margin-bottom:1rem;}
+  .chapters{list-style:none;margin:1.5rem 0;}
+  .chapters li{padding:0.55rem 0;border-bottom:1px solid #30363d;font-family:'Arial',sans-serif;
+                font-size:0.83rem;color:var(--text);display:flex;gap:0.8rem;align-items:flex-start;}
+  .chapters li .cn{color:var(--gold);font-weight:bold;min-width:20px;flex-shrink:0;}
+  .book-btns{display:flex;gap:1rem;flex-wrap:wrap;margin-top:1.5rem;}
+
+  .nl-wrap{padding:4rem 2rem;}
+  .nl-box{background:var(--dark2);border:1px solid var(--gold)33;border-radius:16px;
+           padding:3rem;text-align:center;max-width:580px;margin:0 auto;}
+  .nl-box h3{font-size:1.5rem;color:var(--text);margin-bottom:0.5rem;}
+  .nl-box p{font-size:0.85rem;color:var(--muted);font-family:'Arial',sans-serif;line-height:1.7;margin-bottom:1.5rem;}
+  .nl-form{display:flex;gap:0.8rem;max-width:400px;margin:0 auto;flex-wrap:wrap;}
+  .nl-input{flex:1;background:var(--dark3);border:1px solid #30363d;border-radius:6px;
+             padding:0.7rem 1rem;color:var(--text);font-family:'Arial',sans-serif;font-size:0.85rem;min-width:180px;}
+  .nl-input:focus{outline:none;border-color:var(--gold);}
+  .nl-btn{background:var(--gold);color:var(--black);border:none;border-radius:6px;
+           padding:0.7rem 1.5rem;font-weight:bold;font-family:'Arial',sans-serif;font-size:0.85rem;cursor:pointer;}
+
+  footer{border-top:1px solid #30363d;padding:2rem 3rem;
+          display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;}
+  .f-brand{color:var(--gold);font-size:0.9rem;font-weight:bold;}
+  .f-links{display:flex;gap:1.5rem;}
+  .f-links a{color:var(--muted);text-decoration:none;font-size:0.78rem;font-family:'Arial',sans-serif;transition:color 0.2s;}
+  .f-links a:hover{color:var(--text);}
+  .f-copy{color:var(--muted);font-size:0.72rem;font-family:'Arial',sans-serif;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <div class="nav-logo">B</div>
+    <span class="nav-name">THE AI BOARD</span>
+  </div>
+  <div class="nav-links">
+    <a href="#board">The Board</a>
+    <a href="#how">How It Works</a>
+    <a href="#cases">Case Studies</a>
+    <a href="#book">The Book</a>
+    <a href="https://profdrtan.github.io/ibkr-options-income" target="_blank">Live Demo</a>
+    <a href="#newsletter" class="nav-cta">Get Early Access</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-tag">A New Way to Work &mdash; 2026</div>
+  <h1>Run Your <em>Million-Dollar</em> Operation<br>with <em>Zero Employees</em></h1>
+  <p class="hero-sub">Discover how to orchestrate Claude, ChatGPT, Gemini, DeepSeek and more as your personal AI executive team &mdash; working in concert, 24 hours a day, across every time zone. No salaries. No HR. No politics.</p>
+  <div class="hero-btns">
+    <a href="#book" class="btn-gold">&#128218; Read the Book</a>
+    <a href="#cases" class="btn-outline">&#128200; See Live Case Studies</a>
+  </div>
+  <div class="hero-meta">By <strong>Prof Dr Tan Teik Kheong</strong> &nbsp;&bull;&nbsp; Stanford University &nbsp;&bull;&nbsp; IEEE Senior Member &nbsp;&bull;&nbsp; Written while living it</div>
+</section>
+
+<div class="live-bar">
+  <div class="live-dot"></div>
+  <span style="color:var(--green);font-weight:bold;font-family:'Arial',sans-serif;flex-shrink:0;">LIVE</span>
+  <div class="live-item">&#9889; Trading System: <strong>ARMED</strong> <span class="up">&bull; Monday 9:35pm MYT</span></div>
+  <div class="live-item">&#128218; Books in Progress: <strong>3</strong></div>
+  <div class="live-item">&#127979; Students Managed: <strong>56</strong></div>
+  <div class="live-item">&#129302; Agents in Board: <strong>6</strong></div>
+  <div class="live-item">&#128200; Weekly Income Target: <strong class="up">$1,750</strong></div>
+  <div class="live-item">&#128100; Employees: <strong class="up">0</strong></div>
+</div>
+
+<section class="section" id="board">
+  <div class="section-label">Your Executive Team</div>
+  <h2 class="section-h">Meet Your AI Board</h2>
+  <p class="section-p">Six AI agents. Six distinct roles. One human at the top. You set the vision. They execute. They never sleep, never ask for a raise, and never miss a deadline.</p>
+  <div class="board-grid">
+    <div class="bcard c1">
+      <div class="bcard-icon">&#9889;</div>
+      <div class="bcard-role">Product Owner &amp; Architect</div>
+      <div class="bcard-name">Claude (Anthropic)</div>
+      <div class="bcard-desc">The orchestrator. Holds full project context. Makes architectural decisions, writes production code, manages GitHub, and synthesises all agent outputs into coherent action.</div>
+      <div class="bcard-tags"><span class="tag">System Design</span><span class="tag">Long Context</span><span class="tag">Code Architecture</span><span class="tag">Book Writing</span></div>
+    </div>
+    <div class="bcard c2">
+      <div class="bcard-icon">&#129302;</div>
+      <div class="bcard-role">Researcher &amp; Content Creator</div>
+      <div class="bcard-name">ChatGPT (OpenAI)</div>
+      <div class="bcard-desc">Live web access for real-time research. Drafts content at scale. Image generation via DALL-E. Weekly market outlook agent in the trading system.</div>
+      <div class="bcard-tags"><span class="tag">Live Web Access</span><span class="tag">Content at Scale</span><span class="tag">Image Generation</span></div>
+    </div>
+    <div class="bcard c3">
+      <div class="bcard-icon">&#128161;</div>
+      <div class="bcard-role">Data Analyst &amp; Workspace Integrator</div>
+      <div class="bcard-name">Gemini (Google)</div>
+      <div class="bcard-desc">1 million token context processes entire datasets in one pass. Native Google Workspace integration. Analyses 56 student submissions simultaneously.</div>
+      <div class="bcard-tags"><span class="tag">1M Token Context</span><span class="tag">Google Sheets</span><span class="tag">Bulk Analysis</span></div>
+    </div>
+    <div class="bcard c4">
+      <div class="bcard-icon">&#128270;</div>
+      <div class="bcard-role">Coder &amp; Mathematician</div>
+      <div class="bcard-name">DeepSeek</div>
+      <div class="bcard-desc">Pure coding and mathematical reasoning at near-zero cost. Already running as a voting agent in the CP3405 market prediction pipeline every week.</div>
+      <div class="bcard-tags"><span class="tag">Python</span><span class="tag">Mathematics</span><span class="tag">Near-Zero Cost</span></div>
+    </div>
+    <div class="bcard c5">
+      <div class="bcard-icon">&#128269;</div>
+      <div class="bcard-role">Real-Time Intelligence Officer</div>
+      <div class="bcard-name">Perplexity AI</div>
+      <div class="bcard-desc">Real-time web search with cited sources. Breaking news, current events, fact verification. Feeds live intelligence into market briefings without hallucinating sources.</div>
+      <div class="bcard-tags"><span class="tag">Real-Time Search</span><span class="tag">Cited Sources</span><span class="tag">Fact Checking</span></div>
+    </div>
+    <div class="bcard c6">
+      <div class="bcard-icon">&#127912;</div>
+      <div class="bcard-role">Creative Director</div>
+      <div class="bcard-name">DALL-E / Midjourney</div>
+      <div class="bcard-desc">Visual content on demand. Book covers, illustrations, LinkedIn graphics, course slides &mdash; all generated without a designer. The AI Board's visual identity built entirely by AI.</div>
+      <div class="bcard-tags"><span class="tag">Book Covers</span><span class="tag">Illustrations</span><span class="tag">No Designer Needed</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="how-bg" id="how">
+  <div class="how-inner">
+    <div class="section-label">The Orchestration Blueprint</div>
+    <h2 class="section-h">How the AI Board Works</h2>
+    <p class="section-p">One human at the top. Six agents in execution. Outputs from one become inputs for another. The whole system runs while you sleep.</p>
+    <div class="steps">
+      <div class="step"><div class="step-n">1</div><div><h3>You Set the Strategic Direction</h3><p>You define the goal. Generate income. Write a book. Run a course. You are the CEO. You review final outputs and make the call.</p><div class="chips"><span class="chip">&#128100; You (CEO)</span></div></div></div>
+      <div class="step"><div class="step-n">2</div><div><h3>Claude Breaks It Down and Assigns Tasks</h3><p>Claude translates your direction into specific tasks for each agent. Holds full context across all projects and writes the exact prompts to get right outputs first time.</p><div class="chips"><span class="chip">&#9889; Claude &mdash; Architect</span></div></div></div>
+      <div class="step"><div class="step-n">3</div><div><h3>Specialist Agents Execute in Parallel</h3><p>ChatGPT browses for live data. Gemini analyses bulk datasets. DeepSeek writes Python. All working simultaneously, not waiting for each other.</p><div class="chips"><span class="chip">&#129302; ChatGPT</span><span class="chip">&#128161; Gemini</span><span class="chip">&#128270; DeepSeek</span><span class="chip">&#128269; Perplexity</span></div></div></div>
+      <div class="step"><div class="step-n">4</div><div><h3>Claude Synthesises and Delivers</h3><p>All outputs return to Claude. Claude resolves conflicts, applies judgment, and produces the final deliverable &mdash; a trade recommendation, book chapter, or deployed website.</p><div class="chips"><span class="chip">&#9889; Claude &mdash; Synthesis</span></div></div></div>
+      <div class="step"><div class="step-n">5</div><div><h3>You Approve. The System Scales.</h3><p>Output lands in your dashboard or phone. You approve in one tap. Each week the system runs better with less of your time. This is compounding intelligence.</p><div class="chips"><span class="chip">&#128100; You &mdash; One Tap</span><span class="chip">&#128200; System Compounds</span></div></div></div>
+    </div>
+  </div>
+</div>
+
+<section class="section" id="cases">
+  <div class="section-label">Proof It Works</div>
+  <h2 class="section-h">Live Case Studies</h2>
+  <p class="section-p">Not hypothetical. Every case study below is running right now, built by Prof Dr Tan using The AI Board framework. Real money. Real students. Real books.</p>
+  <div class="case-grid">
+    <div class="ccard"><div class="cstatus live">&#9679; LIVE</div><div class="cnum">Case Study 01</div><div class="ctitle">Algorithmic Options Income &mdash; $7,000/month Target</div><div class="cdesc">Complete trading system with zero developers. IBKR API, SPX Bull Put Spreads, GitHub Actions automation, Telegram alerts, web dashboard. Claude architected. DeepSeek debugged. ChatGPT provides weekly market briefing. First trade: Monday July 7, 2026.</div><div class="chips"><span class="chip">&#9889; Claude</span><span class="chip">&#128270; DeepSeek</span><span class="chip">&#129302; ChatGPT</span></div></div>
+    <div class="ccard"><div class="cstatus live">&#9679; LIVE</div><div class="cnum">Case Study 02</div><div class="ctitle">Three Books Written Simultaneously</div><div class="cdesc">The AI PowerShift (181 pages, bilingual), The 3-Hour Trader (in progress), and The AI Board (this book, writing itself). Claude writes. ChatGPT drafts rapidly. DALL-E illustrates.</div><div class="chips"><span class="chip">&#9889; Claude</span><span class="chip">&#129302; ChatGPT</span><span class="chip">&#127912; DALL-E</span></div></div>
+    <div class="ccard"><div class="cstatus live">&#9679; LIVE</div><div class="cnum">Case Study 03</div><div class="ctitle">University Course on AI Autopilot</div><div class="cdesc">CP3405 &mdash; 56 students, 5 teams, 10 weeks. AI Board handles grading, participation tracking, pipeline monitoring, audit reports, and individualised feedback. Prof Dr Tan focuses only on teaching moments.</div><div class="chips"><span class="chip">&#9889; Claude</span><span class="chip">&#128161; Gemini</span><span class="chip">&#128270; DeepSeek</span></div></div>
+    <div class="ccard"><div class="cstatus live">&#9679; LIVE</div><div class="cnum">Case Study 04</div><div class="ctitle">Multi-LLM Market Intelligence Pipeline</div><div class="cdesc">ChatGPT, Gemini, and DeepSeek each provide weekly SPX/NDX/IWM predictions. Claude synthesises into a composite score with EMA trust-weighting. Human override. Feeds the trading algorithm every Monday.</div><div class="chips"><span class="chip">&#129302; ChatGPT</span><span class="chip">&#128161; Gemini</span><span class="chip">&#128270; DeepSeek</span><span class="chip">&#9889; Claude</span></div></div>
+    <div class="ccard"><div class="cstatus building">&#9679; BUILDING</div><div class="cnum">Case Study 05</div><div class="ctitle">Futures Trading During Asian Hours</div><div class="cdesc">MES Micro E-mini S&amp;P 500 futures during Singapore daytime. AI Board monitors global sessions, Asian market correlations, and generates signals when US options market is closed. Phase 2 next week.</div><div class="chips"><span class="chip">&#9889; Claude</span><span class="chip">&#128269; Perplexity</span><span class="chip">&#129302; ChatGPT</span></div></div>
+    <div class="ccard"><div class="cstatus planned">&#9679; PLANNED</div><div class="cnum">Case Study 06</div><div class="ctitle">Wealth Dashboard on Full Autopilot</div><div class="cdesc">Portfolio rebalancing alerts, bond screening, CPF/EPF tracking, insurance monitoring &mdash; all maintained by the AI Board without manual data entry. Passive income roadmap automated.</div><div class="chips"><span class="chip">&#9889; Claude</span><span class="chip">&#128161; Gemini</span><span class="chip">&#128270; DeepSeek</span></div></div>
+  </div>
+</section>
+
+<div class="book-bg" id="book">
+  <div class="book-inner">
+    <div class="book-cover">
+      <div class="book-cover-icon">&#9875;</div>
+      <div class="book-cover-title">The AI Board</div>
+      <div class="book-cover-sub">How to Run a Million-Dollar Operation with Zero Employees Using AI Agents in Concert</div>
+      <div class="book-cover-author">Prof Dr Tan Teik Kheong<br>Stanford University &bull; IEEE Senior Member</div>
+    </div>
+    <div class="book-info">
+      <h2>The Book That Writes Itself While Living It</h2>
+      <p>Every chapter was written while Prof Dr Tan was executing the exact strategy described. The trading system was being built. The course was running. The income was being generated. This is not theory. This is a live documentary with real money on the line.</p>
+      <p>For the first time, a practitioner with 40 years of institutional experience documents exactly how to orchestrate multiple AI agents as a coordinated executive team &mdash; and proves it works.</p>
+      <ul class="chapters">
+        <li><span class="cn">01</span>The Paradigm Shift &mdash; From Employees to Agents</li>
+        <li><span class="cn">02</span>Meet Your AI Board &mdash; Six Agents, Six Roles</li>
+        <li><span class="cn">03</span>The Orchestration Blueprint &mdash; Agents in Concert</li>
+        <li><span class="cn">04</span>Case Study: Trading System with Zero Developers</li>
+        <li><span class="cn">05</span>Case Study: Three Books Simultaneously</li>
+        <li><span class="cn">06</span>Case Study: University Course on Autopilot</li>
+        <li><span class="cn">07</span>Your First AI Board &mdash; Set Up in One Weekend</li>
+        <li><span class="cn">08</span>Scaling Up &mdash; From Solo to Micro-Enterprise</li>
+        <li><span class="cn">09</span>The Future &mdash; When Agents Hire Agents</li>
+      </ul>
+      <div class="book-btns">
+        <a href="#newsletter" class="btn-gold">Get Early Access</a>
+        <a href="https://github.com/ProfDrTan/the-ai-board" target="_blank" class="btn-outline">Follow on GitHub</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="nl-wrap" id="newsletter">
+  <div class="nl-box">
+    <h3>&#128386; Follow the Journey</h3>
+    <p>Get notified when chapters drop, case studies go live, and when the book launches. Real P&amp;L, real trade results, real agent outputs. No fluff.</p>
+    <div class="nl-form">
+      <input class="nl-input" type="email" placeholder="your@email.com">
+      <button class="nl-btn" onclick="alert('Thank you! You will be notified at launch.')">Notify Me</button>
+    </div>
+    <div style="margin-top:1rem;font-size:0.72rem;color:var(--muted);font-family:'Arial',sans-serif;">No spam. Just the real journey, documented in public.</div>
+  </div>
+</div>
+
+<footer>
+  <div class="f-brand">&#9875; THE AI BOARD</div>
+  <div class="f-links">
+    <a href="https://profdrtan.github.io/ibkr-options-income" target="_blank">Trading System</a>
+    <a href="https://ai-power-shift.pages.dev" target="_blank">AI PowerShift</a>
+    <a href="https://profdrtan.github.io/ai-playbook" target="_blank">AI Playbook</a>
+    <a href="https://github.com/ProfDrTan/the-ai-board" target="_blank">GitHub</a>
+  </div>
+  <div class="f-copy">&copy; 2026 Prof Dr Tan Teik Kheong &bull; Stanford University &bull; IEEE Senior Member</div>
+</footer>
+</body>
+</html>
