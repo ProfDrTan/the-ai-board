@@ -1,0 +1,17 @@
+{
+  "meta": {
+    "issued_by": "The AI Board \u2014 Prof Dr Tan",
+    "version": "1.0",
+    "documentation": "profdrtan.github.io/the-ai-board"
+  },
+  "weekly_mission": "Assess SPX market conditions for bull put spread viability",
+  "return_schema": {
+    "SCORE": "0-100",
+    "BIAS": "BULLISH/NEUTRAL/BEARISH",
+    "CONFIDENCE": "HIGH/MEDIUM/LOW",
+    "KEY_FACTOR": "max 15 words",
+    "RISK": "max 15 words",
+    "WEEK_OUTLOOK": "max 25 words"
+  },
+  "last_updated": "2026-07-11T07:03:54.600292"
+}
